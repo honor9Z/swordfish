@@ -1,0 +1,19 @@
+<form method="post"  class="form-horizontal" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="col-sm-4 col-sm-offset-4">
+            <div class="form-group">
+                <label for="" class="col-sm-2 control-label">{{ field.label }}:</label>
+                <div class="col-sm-9">
+                    {{ field }}
+                    {{ field.errors.0 }}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="col-sm-offset-7 col-sm-3">
+        <input type="submit" class="btn btn-primary" value="提交">
+    </div>
+
+
+</form>
