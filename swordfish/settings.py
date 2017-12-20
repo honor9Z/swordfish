@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'stark.apps.StarkConfig',
     'app01.apps.App01Config',
+    'app03.apps.App03Config',
+    'app04.apps.App04Config',
 ]
 
 MIDDLEWARE = [

@@ -20,14 +20,34 @@ class UserinfoConfig(v1.StarkConfig):
     自己定义的派生类，可以有29种额外的显示方式，效果与admin相同
     '''
 
-    list_display=['id','name']
+    list_display=['id','name','pwd','email']
     def extra_url(self):
         url_list=[
             #除增删改查外，想要新增的url
         ]
         return url_list
-
+    show_add_btn = True
     model_form_class = UserInfoModelForm
+    show_search_form = True#搜索框
+    search_fields = ['name__contains', 'email__contains']#模糊搜索
+    show_actions = True#批量操作框
+    #批量删除
+    def multi_del(self,request):
+        pk_list = request.POST.getlist('pk')#得到所有的勾选的项
+        self.model_class.objects.filter(id__in=pk_list).delete()
+        return HttpResponse('删除成功')
+        # return redirect("http://www.baidu.com")
+    multi_del.desc_text = "批量删除"#给函数内部加一个字段
+
+    def multi_init(self,request):
+        pk_list = request.POST.getlist('pk')
+        #self.model_class.objects.filter(id__in=pk_list).delete()
+        # return HttpResponse('删除成功')
+        #return redirect("http://www.baidu.com")
+    multi_init.desc_text = "初始化"
+
+    actions = [multi_del, multi_init]#给actions加入定制的功能
+
 
 
 class HostModelForm(ModelForm):
