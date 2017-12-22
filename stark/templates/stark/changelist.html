@@ -40,6 +40,7 @@
         <div class="col-md-10 col-md-offset-1">
             <h1 class="text-center">列表页面</h1>
             {#        筛选栏#}
+        {% if the_list.show_comb_filter %}
             <div class="list-filter">
                 {% for item in the_list.gen_comb_filter %}
                     <div>
@@ -49,6 +50,7 @@
                     </div>
                 {% endfor %}
             </div>
+        {% endif %}
             {#        搜索栏#}
             {% if the_list.show_search_form %}
                 <div class="form-group pull-right">

@@ -9,7 +9,7 @@ from django.db.models import Q
 
 #用于封装筛选条件的配置信息
 class FilterOption(object):
-    def __init__(self, field_name, multi=False, condition=None, is_choice=False):
+    def __init__(self, field_name, multi=False, condition=None, is_choice=False,text_func_name=None, val_func_name=None):
         """
         :param field_name: 字段
         :param multi:  是否多选
@@ -20,6 +20,8 @@ class FilterOption(object):
         self.multi = multi
         self.condition = condition
         self.is_choice = is_choice
+        self.text_func_name = text_func_name#组合搜索时，页面上生成显示的文本的函数
+        self.val_func_name = val_func_name#组合搜索时，页面上生成的a标签中的值的函数
 
     def get_queryset(self, _field):
         if self.condition:#是数据的筛选条件
@@ -57,7 +59,9 @@ class FilterRow(object):
             if self.option.is_choice:# ( (1,男),(2,女)  )
                 pk, text = str(val[0]), val[1]
             else:#每个val都是对象
-                pk, text = str(val.pk), str(val)
+                # pk, text = str(val.pk), str(val)
+                text = self.option.text_func_name(val) if self.option.text_func_name else str(val)
+                pk = str(self.option.val_func_name(val)) if self.option.val_func_name else str(val.pk)
             # 当前URL？option.field_name
             # 当前URL？gender=pk
             #制定url的显示规则：
@@ -103,6 +107,7 @@ class ChangeList(object):
     def __init__(self,config,queryset):
         self.config=config#stark.py中写了派生类的话就是那个类，没写的话默认就是StarkConfig
         self.list_display=config.get_list_display()
+        self.edit_link = config.get_edit_link()
         self.model_class=config.model_class#数据库的表
         self.request=config.request#StarkConfig中默认是None，不过程序运行后就会有
         self.show_add_btn=config.get_show_add_btn()
@@ -113,6 +118,7 @@ class ChangeList(object):
         self.actions=config.get_actions()#得到派生类中写的actions的内容[]
         self.show_actions=config.get_show_actions()#操作框
         #组合搜索
+        self.show_comb_filter=config.get_show_comb_filter()
         self.comb_filter=config.get_comb_filter()
 
         from utils.pager import Pagination
@@ -161,6 +167,9 @@ class ChangeList(object):
                     val = getattr(row,field_name)
                 else:#每个td都拥有的功能，checkbox、edit、delete、
                     val = field_name(self.config,row)
+                # 用于定制编辑列
+                if field_name in self.edit_link:
+                    val = self.edit_link_tag(row.pk, val)
                 temp.append(val)
             new_data_list.append(temp)
         return new_data_list
@@ -199,6 +208,12 @@ class ChangeList(object):
                 row = FilterRow(option,option.get_choices(_field),self.request)
             # 可迭代对象，迭代详细在FilterRow的__iter__中
             yield row
+
+    def edit_link_tag(self,pk,text):
+        query_str = self.request.GET.urlencode()  # page=2&nid=1
+        params = QueryDict(mutable=True)
+        params[self.config._query_param_key] = query_str
+        return mark_safe('<a href="%s?%s">%s</a>' % (self.config.get_change_url(pk), params.urlencode(),text,))  # /stark/app01/userinfo/
 
 
 
@@ -257,6 +272,14 @@ class StarkConfig(object):
             data.insert(0,StarkConfig.checkbox)#在最前面插一个td
         return data
 
+    edit_link=[]
+    def get_edit_link(self):
+        result=[]
+        if self.edit_link:
+            result.extend(self.edit_link)
+        return result
+
+
 ######### 2是否显示add按钮
     show_add_btn = True  # 默认显示
     def get_show_add_btn(self):
@@ -296,6 +319,10 @@ class StarkConfig(object):
 
 
 #############4 组合搜索
+    show_comb_filter = False
+    def get_show_comb_filter(self):
+        return self.show_comb_filter
+
     comb_filter=[]#默认为空
     def get_comb_filter(self):
         result=[]
@@ -355,6 +382,16 @@ class StarkConfig(object):
         #     class Meta:
         #         model = self.model_class
         #         fields = "__all__"
+        #
+        #         error_messages = {
+        #             "__all__":{
+        #
+        #                   },
+        #         'email': {
+        #         'required': '',
+        #         'invalid': '邮箱格式错误..',
+        #         }
+        #         }
         # type创建TestModelForm类
         meta = type('Meta', (object,), {'model': self.model_class, 'fields': '__all__'})
         TestModelForm = type('TestModelForm', (ModelForm,), {'Meta': meta})
@@ -367,7 +404,6 @@ class StarkConfig(object):
         _popbackid = request.GET.get('_popbackid')#临时需要添加的外键字段所对应的输入框的id
         if request.method == 'GET':
             form = model_form_class()
-            return render(request, 'stark/add_view.html', {'form': form})
         else:
             form = model_form_class(request.POST)
             if form.is_valid():
@@ -378,6 +414,7 @@ class StarkConfig(object):
                     result = {'id':new_obj.pk, 'text':str(new_obj),'popbackid':_popbackid }
                     return render(request,'stark/popup_response.html',{'json_result':json.dumps(result,ensure_ascii=False)})
                 return redirect(self.get_list_url())
+        return render(request, 'stark/add_view.html', {'form': form})
 
     #删
     def delete_view(self, request, nid,*args, **kwargs):
