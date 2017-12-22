@@ -1,12 +1,19 @@
 <form method="post"  class="form-horizontal" novalidate>
     {% csrf_token %}
-    {% for field in form %}
+{#    dic={'is_popup': True, 'item': bfield,'popup_url':popurl}#}
+    {% for dic in new_form %}
         <div class="col-sm-4 col-sm-offset-4">
             <div class="form-group">
-                <label for="" class="col-sm-2 control-label">{{ field.label }}:</label>
-                <div class="col-sm-9">
-                    {{ field }}
-                    {{ field.errors.0 }}
+                <label for="" class="col-sm-2 control-label">{{ dic.item.field.label }}:</label>
+                <div class="col-sm-9" style="position: relative">
+                    {# modelform自动形成input#}
+                    {{ dic.item }}
+                    {% if dic.is_popup %}{# 单选或多选#}
+                        <div style="position: absolute;top: 10px;left: 330px;">
+                            <a href="" onclick="popUp('{{ dic.popup_url }}')"><i class="fa fa-arrows" aria-hidden="true"></i></a>
+                        </div>
+                    {% endif %}
+                    {{ dic.item.field.errors.0 }}
                 </div>
             </div>
         </div>
@@ -17,3 +24,19 @@
 
 
 </form>
+
+
+<script>
+    function popUp(url) {
+        var popupPage = window.open(url, url, "status=1, height:500, width:600, toolbar=0, resizeable=0");
+    }
+    function popupCallback(dic) {
+        var op = document.createElement('option');
+        op.value = dic.id;
+        op.text = dic.text;
+        op.setAttribute('selected','selected');
+        document.getElementById(dic.popbackid).appendChild(op);
+
+    }
+
+</script>

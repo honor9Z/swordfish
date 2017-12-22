@@ -1,4 +1,5 @@
 import copy
+import json
 from django.shortcuts import HttpResponse,render,redirect
 from django.urls import reverse
 from django.conf.urls import url, include
@@ -28,7 +29,7 @@ class FilterOption(object):
     def get_choices(self, _field):#是choices
         return _field.choices
 
-
+#可迭代对象，封装了筛选中的每一行数据。
 class FilterRow(object):
     def __init__(self, option, data, request):
         self.option = option
@@ -207,7 +208,7 @@ class ChangeList(object):
 
 class StarkConfig(object):
     """
-        用于为每个类（即每张表）生成url对应关系，并处理用户请求
+        用于为每个类（即每张表）生成url对应关系，并处理用户请求的基类
     """
     def __init__(self,model_class,site):
         self.model_class=model_class
@@ -236,9 +237,17 @@ class StarkConfig(object):
     def delete(self,obj=None,is_header=False):
         if is_header:
             return '删除操作'
+        query_str = self.request.GET.urlencode()
+        if query_str:
+            # 重新构造
+            params = QueryDict(mutable=True)
+            params[self._query_param_key] = query_str
+            return mark_safe('<a href="%s?%s">删除</a>' % (self.get_delete_url(obj.id), params.urlencode(),))
+
         return mark_safe('<a href="%s">删除</a>'%(self.get_delete_url(obj.id),) )
 
     list_display=[]
+    #得到派生类中自定义的list_display
     def get_list_display(self):
         data=[]
         if self.list_display:#派生类中定义的要显示的字段
@@ -327,7 +336,7 @@ class StarkConfig(object):
             # 带搜索条件的数据，没有搜索条件的话就是全部数据。有筛选条件的话，还得处理成筛选后的数据
             queryset=self.model_class.objects.filter(self.get_search_condition()).filter(**comb_condition).distinct()
 
-            the_list=ChangeList(self,queryset)
+            the_list=ChangeList(self,queryset)#封装好要向前端传的值
             return render(request, 'stark/changelist.html', {'the_list':the_list})
         elif request.method=='POST' and self.get_show_actions():#批量操作
             func_name_str = request.POST.get('list_action')#前端传的操作name
@@ -355,29 +364,35 @@ class StarkConfig(object):
     def add_view(self, request, *args, **kwargs):
         # 添加页面
         model_form_class = self.get_model_form_class()#根据modelform生成input
+        _popbackid = request.GET.get('_popbackid')#临时需要添加的外键字段所对应的输入框的id
         if request.method == 'GET':
             form = model_form_class()
             return render(request, 'stark/add_view.html', {'form': form})
         else:
             form = model_form_class(request.POST)
             if form.is_valid():
-                form.save()
+                new_obj=form.save()
+                if _popbackid:
+                    # 判断是否是来源于popup请求
+                    # render一个页面，写自执行函数
+                    result = {'id':new_obj.pk, 'text':str(new_obj),'popbackid':_popbackid }
+                    return render(request,'stark/popup_response.html',{'json_result':json.dumps(result,ensure_ascii=False)})
                 return redirect(self.get_list_url())
-            return render(request, 'stark/add_view.html', {'form': form})
+
     #删
     def delete_view(self, request, nid,*args, **kwargs):
         self.model_class.objects.filter(pk=nid).delete()
-        return redirect(self.get_list_url())
+        list_query_str = request.GET.get(self._query_param_key)
+        list_url = '%s?%s' % (self.get_list_url(), list_query_str,)
+        return redirect(list_url)
     #改
     def change_view(self, request, nid,*args, **kwargs):
         # self.model_class.objects.filter(id=nid)
-
         obj = self.model_class.objects.filter(pk=nid).first()
-
         if not obj:
             return redirect(self.get_list_url())
-
         model_form_class = self.get_model_form_class()
+        _popbackid = request.GET.get('_popbackid')#临时需要添加的外键字段所对应的输入框的id
         # GET,显示标签+默认值
         if request.method == 'GET':
             form = model_form_class(instance=obj)
