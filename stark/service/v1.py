@@ -135,7 +135,7 @@ class ChangeList(object):
     def modify_actions(self):
         result = []#批量操作内容，默认为空，去派生类中定义
         for func in self.actions:#self.actions=config.get_actions()，默认为空
-            temp = {'name':func.__name__,'text':func.desc_text}#name是函数名，text是自加的描述
+            temp = {'name':func.__name__,'text':func.short_desc}#name是函数名，text是自加的描述
             result.append(temp)
         return result
 
@@ -250,11 +250,11 @@ class StarkConfig(object):
         #url地址栏的搜索条件
         query_str=self.request.GET.urlencode()
         if query_str:
-            #重新构造
+            #重新构造<button class="btn btn-primary"></button>
             params=QueryDict(mutable=True)
             params[self._query_param_key]=query_str
-            return mark_safe('<a href="%s?%s">编辑</a>' %(self.get_change_url(obj.id),params.urlencode(),))
-        return mark_safe('<a href="%s">编辑</a>' %(self.get_change_url(obj.id),))
+            return mark_safe('<button class="btn btn-primary"><a href="%s?%s" style="color:white;">编辑</a></button>' %(self.get_change_url(obj.id),params.urlencode(),))
+        return mark_safe('<button class="btn btn-primary"><a href="%s" style="color:white;">编辑</a></button>' %(self.get_change_url(obj.id),))
     def delete(self,obj=None,is_header=False):
         if is_header:
             return '删除操作'
@@ -263,9 +263,9 @@ class StarkConfig(object):
             # 重新构造
             params = QueryDict(mutable=True)
             params[self._query_param_key] = query_str
-            return mark_safe('<a href="%s?%s">删除</a>' % (self.get_delete_url(obj.id), params.urlencode(),))
+            return mark_safe('<button class="btn btn-danger"><a href="%s?%s" style="color:white;">删除</a></button>' % (self.get_delete_url(obj.id), params.urlencode(),))
 
-        return mark_safe('<a href="%s">删除</a>'%(self.get_delete_url(obj.id),) )
+        return mark_safe('<button class="btn btn-danger"><a href="%s" style="color:white;">删除</a></button>'%(self.get_delete_url(obj.id),) )
 
     list_display=[]
     #得到派生类中自定义的list_display
@@ -462,6 +462,7 @@ class StarkConfig(object):
     def change_view(self, request, nid,*args, **kwargs):
         # self.model_class.objects.filter(id=nid)
         obj = self.model_class.objects.filter(pk=nid).first()
+        print(obj)
         if not obj:
             return redirect(self.get_list_url())
         model_form_class = self.get_model_form_class()
@@ -469,7 +470,7 @@ class StarkConfig(object):
         # GET,显示标签+默认值
         if request.method == 'GET':
             form = model_form_class(instance=obj)
-            return render(request, 'stark/change_view.html', {'form': form})
+            return render(request, 'stark/change_view.html', {'form': form,'config': self})
         else:
             form = model_form_class(instance=obj, data=request.POST)
             if form.is_valid():
@@ -479,8 +480,6 @@ class StarkConfig(object):
 
                 return redirect(list_url)
             return render(request, 'stark/change_view.html', {'form': form})
-
-#####################################反向生成url#############################
 
 
 

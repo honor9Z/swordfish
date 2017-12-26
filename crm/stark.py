@@ -55,7 +55,7 @@ class UserInfoConfig(v1.StarkConfig):
         return HttpResponse('删除成功')
         # return redirect("http://www.baidu.com")
 
-    multi_del.desc_text = "批量删除"  # 给函数内部加一个字段
+    multi_del.short_desc = "批量删除"  # 给函数内部加一个字段
     actions = [multi_del]  # 给actions加入定制的功能
 
     def display_depart(self,obj=None,is_header=False):
@@ -209,3 +209,149 @@ class ConsultRecordConfig(v1.StarkConfig):
 
         return super(ConsultRecordConfig,self).changelist_view(request,*args,**kwargs)
 v1.site.register(models.ConsultRecord,ConsultRecordConfig)
+
+#  老师上课记录
+class CourseRecordConfig(v1.StarkConfig):
+    def extra_url(self):
+        app_model_name=(self.model_class._meta.app_label,self.model_class._meta.model_name)
+        url_list=[
+            url(r'^(\d+)/score_list/$',self.wrap(self.score_list),name='%s_%s_score_list'%app_model_name),
+
+        ]
+        return url_list
+    #学生作业情况
+    def score_list(self,request,record_id):
+        if request.method == "GET":
+            from django.forms import Form,fields,widgets
+            study_record_list=models.StudyRecord.objects.filter(course_record_id=record_id)
+            data=[]
+            for obj in study_record_list:
+                #Form组件
+                # class TempForm(Form):
+                #     score = fields.ChoiceField(choices=models.StudyRecord.score_choices)
+                #     homework_note = fields.CharField(widget=widgets.Textarea())
+                TempForm = type('TempForm', (Form,), {
+                    'score_%s' % obj.pk: fields.ChoiceField(choices=models.StudyRecord.score_choices),
+                    'homework_note_%s' % obj.pk: fields.CharField(widget=widgets.Textarea())
+                })
+                data.append({'obj': obj, 'form': TempForm(
+                    initial={'score_%s' % obj.pk: obj.score, 'homework_note_%s' % obj.pk: obj.homework_note})})
+            return render(request, 'score_list.html',{'data': data})
+        else:
+            data_dict={}
+            for key,value in request.POST.items():
+                if key == "csrfmiddlewaretoken":
+                    continue
+                name,nid =key.rsplit('_',1)
+                if nid in data_dict:
+                    data_dict[nid][name]=value
+                else:
+                    data_dict[nid]={name:value}
+            for nid,update_dict in data_dict.items():
+                models.StudyRecord.objects.filter(id=nid).update(**update_dict)
+            return redirect(request.path_info)
+
+    def attendance(self,obj=None,is_header=False):
+        if is_header:
+            return '考勤'
+        return mark_safe("<a href='/stark/crm/studyrecord/?course_record=%s'>考勤管理</a>" %obj.pk)
+
+    def display_score_list(self,obj=None,is_header=False):
+        if is_header:
+            return '成绩录入'
+        from django.urls import reverse
+        rurl = reverse("stark:crm_courserecord_score_list",args=(obj.pk,))
+        return mark_safe("<a href='%s'>成绩录入</a>" %rurl)
+
+    list_display = ['class_obj','day_num',attendance,display_score_list]
+
+    def multi_init(self,request):
+        """
+        自定义执行批量初始化方法
+        """
+        # 勾选的上课记录ID列表
+        pk_list = request.POST.getlist('pk')
+
+        # 上课记录对象
+        record_list = models.CourseRecord.objects.filter(id__in=pk_list)
+        for record in record_list:
+            # day1,day2,day3
+            # record.class_obj # 关联的班级
+            exists = models.StudyRecord.objects.filter(course_record=record).exists()
+            if exists:
+                continue
+
+            student_list = models.Student.objects.filter(class_list=record.class_obj)
+            bulk_list = []
+            for student in student_list:
+                # 为每一个学生创建学习记录
+                bulk_list.append(models.StudyRecord(student=student,course_record=record))
+            models.StudyRecord.objects.bulk_create(bulk_list)
+        return redirect('http://www.baidu.com')
+
+    multi_init.short_desc = "学生初始化"
+    actions = [multi_init,]
+    show_actions = True
+v1.site.register(models.CourseRecord,CourseRecordConfig)
+
+
+#  学生学习记录
+class StudyRecordConfig(v1.StarkConfig):
+    def display_record(self,obj=None,is_header=False):
+        if is_header:
+            return '出勤情况'
+        return obj.get_record_display()
+
+    list_display = ['course_record','student',display_record]
+
+    comb_filter = [
+        v1.FilterOption('course_record')
+    ]
+
+    def action_checked(self,request):
+        pk_list = request.POST.getlist('pk')
+        models.StudyRecord.objects.filter(id__in=pk_list).update(record='checked')
+        return redirect('/stark/crm/studyrecord/')
+
+    action_checked.short_desc= "已签到"
+
+    def action_vacate(self,request):
+        pk_list = request.POST.getlist('pk')
+        models.StudyRecord.objects.filter(id__in=pk_list).update(record='vacate')
+        return redirect('/stark/crm/studyrecord/')
+
+    action_vacate.short_desc= "请假"
+
+    def action_late(self,request):
+        pk_list = request.POST.getlist('pk')
+        models.StudyRecord.objects.filter(id__in=pk_list).update(record='late')
+        return redirect('/stark/crm/studyrecord/')
+
+    action_late.short_desc= "迟到"
+
+    def action_noshow(self,request):
+        pk_list = request.POST.getlist('pk')
+        models.StudyRecord.objects.filter(id__in=pk_list).update(record='noshow')
+        return redirect('/stark/crm/studyrecord/')
+    action_noshow.short_desc= "缺勤"
+
+    def action_leave_early(self,request):
+        pk_list = request.POST.getlist('pk')
+        models.StudyRecord.objects.filter(id__in=pk_list).update(record='leave_early')
+        return redirect('/stark/crm/studyrecord/')
+
+    action_leave_early.short_desc= "早退"
+
+    actions = [action_checked,action_vacate, action_late,action_noshow,action_leave_early]
+
+    show_actions = True
+
+    show_add_btn = False
+
+v1.site.register(models.StudyRecord,StudyRecordConfig)
+
+
+
+
+from crm.congfigs.student import StudentConfig
+v1.site.register(models.Student,StudentConfig)
