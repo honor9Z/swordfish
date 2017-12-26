@@ -140,6 +140,12 @@ class ChangeList(object):
         return result
 
     def add_url(self):#添加操作的url
+        query_str = self.request.GET.urlencode()
+        if query_str:
+            # 重新构造
+            params = QueryDict(mutable=True)
+            params[self.config._query_param_key] = query_str
+            return self.config.get_add_url()+'?'+params.urlencode()
         return self.config.get_add_url()
 
     def head_list(self):
@@ -318,7 +324,7 @@ class StarkConfig(object):
         return result
 
 
-#############4 组合搜索
+#############5 组合搜索
     show_comb_filter = False
     def get_show_comb_filter(self):
         return self.show_comb_filter
@@ -438,7 +444,11 @@ class StarkConfig(object):
                     return render(request, 'stark/popup_response.html',
                                   {'json_result': json.dumps(result, ensure_ascii=False)})
                 else:
-                    return redirect(self.get_list_url())
+                    list_query_str = request.GET.get(self._query_param_key)
+                    list_url = '%s?%s' % (self.get_list_url(), list_query_str,)
+
+                    return redirect(list_url)
+                    # return redirect(self.get_list_url())
         return render(request, 'stark/add_view.html', {'form': form, 'config': self})
 
 

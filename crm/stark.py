@@ -16,6 +16,7 @@ class SchoolConfig(v1.StarkConfig):
     edit_link = ['title']
 v1.site.register(models.School,SchoolConfig)
 
+
 class CourseConfig(v1.StarkConfig):
     list_display = ['id','name']
     def get_list_display(self):
@@ -90,7 +91,7 @@ class ClassListConfig(v1.StarkConfig):
     def num(self,obj=None,is_header=False):
         if is_header:
             return '人数'
-        # ############## 作业1：列举班级的人数 #############
+
         student_count=obj.student_set.count()
         return student_count
 
@@ -104,16 +105,14 @@ class ClassListConfig(v1.StarkConfig):
         return data
     edit_link = [course_semester,]
 
-    # ############## 作业2：组合搜索（校区、课程） #############
     show_comb_filter = True  # 搜索框
     comb_filter = [
         #  FilterOption('字段', 是否多选, 条件, 是否是choice),
         v1.FilterOption('school'),
         v1.FilterOption('course' ),
-        # , condition={'id__gt': 3}
     ]
-    # ############## 作业3：popup增加时，是否将新增的数据显示到页面中（获取条件） #############
 v1.site.register(models.ClassList,ClassListConfig)
+
 
 class CustomerConfig(v1.StarkConfig):
     def display_gender(self,obj=None,is_header=False):
@@ -136,7 +135,7 @@ class CustomerConfig(v1.StarkConfig):
         # 构造QueryDict
         # urlencode()
         for item in course_list:
-            temp = "<a style='display:inline-block;padding:3px 5px;border:1px solid blue;margin:2px;' href='/stark/crm/customer/%s/%s/dc/'>%s X</a>" %(obj.pk,item.pk,item.name)
+            temp = "<div style='display:inline-block;padding:3px 5px;border:1px solid blue;margin:2px;color:bule;'>%s<a href='/stark/crm/customer/%s/%s/dc/'> <span class='glyphicon glyphicon-remove'></span></a></div>" %(item.name,obj.pk,item.pk)
             html.append(temp)
 
         return mark_safe("".join(html))
@@ -153,7 +152,7 @@ class CustomerConfig(v1.StarkConfig):
         return mark_safe("<a href='/stark/crm/consultrecord/?customer=%s'>查看跟进记录</a>" %(obj.pk,))
 
     list_display = ['qq','name',display_gender,display_education,display_course,display_status,record]
-    edit_link = ['qq']
+    edit_link = ['qq','name']
     def get_list_display(self):
         data = []
         if self.list_display:  # 派生类中定义的要显示的字段
@@ -186,7 +185,6 @@ class CustomerConfig(v1.StarkConfig):
 v1.site.register(models.Customer,CustomerConfig)
 
 
-
 class ConsultRecordConfig(v1.StarkConfig):
     list_display = ['customer','consultant','date']
     def get_list_display(self):
@@ -210,5 +208,4 @@ class ConsultRecordConfig(v1.StarkConfig):
             return HttpResponse('别抢客户呀...')
 
         return super(ConsultRecordConfig,self).changelist_view(request,*args,**kwargs)
-
 v1.site.register(models.ConsultRecord,ConsultRecordConfig)
