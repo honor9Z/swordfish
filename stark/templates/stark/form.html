@@ -31,12 +31,14 @@
         var popupPage = window.open(url, url, "status=1, height:500, width:600, toolbar=0, resizeable=0");
     }
     function popupCallback(dic) {
-        var op = document.createElement('option');
-        op.value = dic.id;
-        op.text = dic.text;
-        op.setAttribute('selected','selected');
-        document.getElementById(dic.popbackid).appendChild(op);
+        if (dic.status) {
+            var op = document.createElement('option');
+            op.value = dic.id;
+            op.text = dic.text;
+            op.setAttribute('selected', 'selected');
+            document.getElementById(dic.popbackid).appendChild(op);
 
+        }
     }
 
 </script>

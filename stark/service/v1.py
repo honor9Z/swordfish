@@ -411,10 +411,36 @@ class StarkConfig(object):
                 if _popbackid:
                     # 判断是否是来源于popup请求
                     # render一个页面，写自执行函数
-                    result = {'id':new_obj.pk, 'text':str(new_obj),'popbackid':_popbackid }
-                    return render(request,'stark/popup_response.html',{'json_result':json.dumps(result,ensure_ascii=False)})
-                return redirect(self.get_list_url())
-        return render(request, 'stark/add_view.html', {'form': form})
+                    # popUp('/stark/crm/userinfo/add/?_popbackid=id_consultant&model_name=customer&related_name=consultant')
+                    from django.db.models.fields.reverse_related import ManyToOneRel, ManyToManyRel
+                    result = {'status': False, 'id': None, 'text': None, 'popbackid': _popbackid}
+
+                    model_name = request.GET.get('model_name')  # customer
+                    related_name = request.GET.get('related_name')  # consultant, "None"
+                    for related_object in new_obj._meta.related_objects:
+                        _model_name = related_object.field.model._meta.model_name
+                        _related_name = related_object.related_name
+                        if (type(related_object) == ManyToOneRel):
+                            _field_name = related_object.field_name
+                        else:
+                            _field_name = 'pk'
+                        _limit_choices_to = related_object.limit_choices_to
+                        if model_name == _model_name and related_name == str(_related_name):
+                            is_exists = self.model_class.objects.filter(**_limit_choices_to, pk=new_obj.pk).exists()
+                            if is_exists:
+                                # 如果新创建的用户时，销售部的人，页面才增加
+                                # 分门别类做判断：
+                                result['status'] = True
+                                result['text'] = str(new_obj)
+                                result['id'] = getattr(new_obj, _field_name)
+                                return render(request, 'stark/popup_response.html',
+                                              {'json_result': json.dumps(result, ensure_ascii=False)})
+                    return render(request, 'stark/popup_response.html',
+                                  {'json_result': json.dumps(result, ensure_ascii=False)})
+                else:
+                    return redirect(self.get_list_url())
+        return render(request, 'stark/add_view.html', {'form': form, 'config': self})
+
 
     #删
     def delete_view(self, request, nid,*args, **kwargs):
