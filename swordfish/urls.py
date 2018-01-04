@@ -16,10 +16,12 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from stark.service import v1
-
+from crm import views
 urlpatterns = [
     # url(r'^admin/', admin.site.urls),
     url(r'^stark/', v1.site.urls),#自己创建的类似admin的功能，需在app里有相应的注册
+    url(r'^login/', views.login),#自己创建的类似admin的功能，需在app里有相应的注册
+    url(r'^index/', views.index),#自己创建的类似admin的功能，需在app里有相应的注册
 ]
 
 

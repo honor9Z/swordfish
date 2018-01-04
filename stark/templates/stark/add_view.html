@@ -1,26 +1,41 @@
-{% load staticfiles %}
+{% extends 'stark/base_temp.html' %}
 {% load change_form %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>add_view</title>
-    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.css' %}">
-    <link rel="stylesheet" href="{% static "mycss/stark-form.css" %}" />
-    <link rel="stylesheet" href="{% static 'font-awesome/css/font-awesome.min.css' %}">
 
-</head>
-<body>
-<h1 class="text-center">添加页面</h1>
-<form method="post"  novalidate>
-    {% csrf_token %}
+{% block title %}添加页面{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block body %}
+    <h1 class="text-center">添加页面</h1>
+    <form method="post"  novalidate>
+        {% csrf_token %}
+    {#    {% include 'stark/form.html' %}#}
+        {% new_form config form  %}{#    def new_form(model_form_obj):#}
+    </form>
+{% endblock %}
+{#{% load staticfiles %}#}
+{#{% load change_form %}#}
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <meta http-equiv="X-UA-Compatible" content="IE=edge">#}
+{#    <meta name="viewport" content="width=device-width, initial-scale=1">#}
+{#    <title>add_view</title>#}
+{#    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.css' %}">#}
+{#    <link rel="stylesheet" href="{% static "mycss/stark-form.css" %}" />#}
+{#    <link rel="stylesheet" href="{% static 'font-awesome/css/font-awesome.min.css' %}">#}
+{##}
+{#</head>#}
+{#<body>#}
+{#<h1 class="text-center">添加页面</h1>#}
+{#<form method="post"  novalidate>#}
+{#    {% csrf_token %}#}
 {#    {% include 'stark/form.html' %}#}
-    {% new_form config form  %}{#    def new_form(model_form_obj):#}
-</form>
-
-
-
-</body>
-</html>
+{#    {% new_form config form  %}{#    def new_form(model_form_obj):#}
+{#</form>#}
+{##}
+{##}
+{##}
+{#</body>#}
+{#</html>#}

@@ -1,0 +1,70 @@
+{% load staticfiles %}
+{% load rbac %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static "bootstrap-3.3.7-dist/css/bootstrap.css" %}" />
+    <link rel="stylesheet" href="{% static "mycss/stark-form.css" %}" />
+    <link rel="stylesheet" href="/static/rbac/rbac.css" />
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.css" />
+    <style>
+        body{
+            margin: 0;
+        }
+        .pg-header{
+            height: 48px;
+            background-color: #2e6da4;
+            color: white;
+        }
+        ::-webkit-scrollbar {
+            width:12px;
+            }
+            /* 滚动槽 */
+        ::-webkit-scrollbar-track {
+            border-radius:10px;
+            }
+            /* 滚动条滑块 */
+        ::-webkit-scrollbar-thumb {
+            border-radius:10px;
+            background-color: #f2dede;
+            }
+        .item-title:hover{
+                        background-color: #0DB3A6;
+
+        }
+        .item-permission{
+            font-size: 15px;
+            margin-left: 10px;
+        }
+        .item-permission li{
+            height: 30px;
+            list-style: none;
+        }
+        .item-permission li:hover{
+            background-color: #0DB3A6;
+        }
+    </style>
+    {% block css %} {% endblock %}
+</head>
+<body>
+    <div class="pg-header"style="padding-top: 0">
+        <h2 style="line-height: 50px;padding: 0 20px">CRM资源管理系统</h2>
+    </div>
+    <div>
+        <div style="position: absolute;left: 0;width: 200px;top:68px;bottom:0;background-color: #c4e3f3;">
+            {% menu_html request %}
+        </div>
+        <div style="position: absolute;left: 201px;right: 0px;top:68px;bottom: 0;overflow: scroll">
+            {% block body %}{% endblock %}
+        </div>
+    </div>
+    <script src="/static/jquery-1.12.4.min.js"></script>
+    <script src="/static/rbac/rbac.js"></script>
+    {% block js %} {% endblock %}
+</body>
+</html>

@@ -1,0 +1,5 @@
+{% extends 'stark/base_temp.html' %}
+
+{% block body %}
+    <h1 style="padding: 200px 0 0 400px  ">欢迎登录： {{ request.session.user_info.name }}</h1>
+{% endblock %}

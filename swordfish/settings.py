@@ -38,10 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'stark.apps.StarkConfig',
+    'rbac.apps.RbacConfig',
     'app01.apps.App01Config',
     'app03.apps.App03Config',
     'app04.apps.App04Config',
     'crm.apps.CrmConfig',
+
 ]
 
 MIDDLEWARE = [
@@ -52,6 +54,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'rbac.middlewares.rbac.LoginMiddleware',
+    'rbac.middlewares.rbac.RbacMiddleware',
 ]
 
 ROOT_URLCONF = 'swordfish.urls'
@@ -126,4 +130,23 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS=[
     os.path.join(BASE_DIR,'static'),
+]
+
+# ################## 自定义消息提醒的配置 ###################
+MESSAGE_CLASSES = [
+    'utils.message.email.Email',
+    'utils.message.msg.Msg',
+    'utils.message.wx.WeChat',
+    'utils.message.dingding.DingDing',
+]
+
+
+# ################## Rbac配置 ###################
+
+PERMISSION_URL_DICT_KEY = "permission_url_dict"
+PERMISSION_MENU_KEY = "afsdfasdfadfsdfsdf"
+
+VALID_URL = [
+    "/login/",
+    "/index/"
 ]

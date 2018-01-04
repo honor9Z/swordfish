@@ -1,5 +1,5 @@
 from django.db import models
-
+from rbac import models as rbac_model
 class Department(models.Model):
     """
     部门表
@@ -17,11 +17,13 @@ class UserInfo(models.Model):
     """
     员工表
     """
-    # auth = models.OneToOneField(verbose_name='用户权限', to=rbac_model.User)
+    auth = models.OneToOneField(verbose_name='用户权限', to=rbac_model.User,null=True,blank=True)
+
     name = models.CharField(verbose_name='员工姓名', max_length=16)
     username = models.CharField(verbose_name='用户名', max_length=32)
     password = models.CharField(verbose_name='密码', max_length=64)
     email = models.EmailField(verbose_name='邮箱', max_length=64)
+    openid = models.CharField(verbose_name='微信唯一ID',max_length=64,null=True,blank=True)
 
     depart = models.ForeignKey(verbose_name='部门', to="Department",to_field="code")
 
@@ -165,9 +167,41 @@ class Customer(models.Model):
     consultant = models.ForeignKey(verbose_name="课程顾问", to='UserInfo', related_name='consultant',limit_choices_to={'depart_id':1000})
     date = models.DateField(verbose_name="咨询日期", auto_now_add=True)
     last_consult_date = models.DateField(verbose_name="最后跟进日期", auto_now_add=True)
-
+    recv_date = models.DateField(verbose_name='接客时间', null=True, blank=True)
     def __str__(self):
         return "姓名:{0},QQ:{1}".format(self.name, self.qq, )
+
+
+
+class CustomerDistribution(models.Model):
+    """
+    客户分配表
+    """
+    user = models.ForeignKey(verbose_name='客户顾问',to='UserInfo',related_name='cds',limit_choices_to={'depart_id':1000})
+    customer = models.ForeignKey(verbose_name='客户',to='Customer',related_name='dealers')
+    ctime = models.DateField()
+    status_choices = (
+        (1,'正在跟进'),
+        (2,'已成单'),
+        (3,'3天未跟进'),
+        (4,'15天未成单'),
+    )
+    status = models.IntegerField(verbose_name='状态',choices=status_choices,default=1)
+    memo = models.CharField(verbose_name='更多信息',max_length=255)
+
+
+class SaleRank(models.Model):
+    """
+    销售权重和数量
+    """
+    user = models.ForeignKey(to="UserInfo",limit_choices_to={'depart_id':1000})
+    num = models.IntegerField(verbose_name='数量')
+    weight = models.IntegerField(verbose_name='权重')
+
+
+
+
+
 
 
 class ConsultRecord(models.Model):

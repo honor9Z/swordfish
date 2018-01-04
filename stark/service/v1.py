@@ -192,7 +192,7 @@ class ChangeList(object):
         '''
                 comb_filter = [
                 v1.FilterOption('gender', is_choice=True),#关键字传参，代表是choice
-                v1.FilterOption('depart'),#, condition={'id__gt': 3}
+                v1.FilterOption('depart'),#, 筛选只显示id大于三的部门condition={'id__gt': 3}
                 v1.FilterOption('roles', True),#True传入，代表是多选
             ]
                 '''
@@ -336,8 +336,12 @@ class StarkConfig(object):
             result.extend(self.comb_filter)#得到派生类中的条件删选
         return result
 
-
-
+#############6排序
+    order_by = []
+    def get_order_by(self):
+        result = []
+        result.extend(self.order_by)
+        return result
 
 
 

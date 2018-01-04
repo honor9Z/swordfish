@@ -1,0 +1,156 @@
+{% extends 'stark/base_temp.html' %}
+{% block title %}公共客户资源{% endblock %}
+{% block css %}
+    <style>
+        table td,th{
+            text-align: center;
+        }
+
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <br><br><h1>公共资源</h1><br>
+            <table border="1" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>QQ</th>
+                <th>姓名</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in customer_list %}
+            <tr>
+                <td class="{{ row.id }}">{{ row.id }}</td>
+                <td>{{ row.qq }}</td>
+                <td>{{ row.name }}</td>
+                <td> <a href="/stark/crm/customer/{{ row.id }}/competition/">抢单</a> <button class="btn btn-info">抢单</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+    <script>
+
+    $('.btn').click(function () {
+        var cid=$(this).parent().children('td:first').attr('class')
+        alert(cid)
+
+        $.ajax({
+
+            url:'/stark/crm/customer/'+cid+'/competition/',
+            type:'POST',
+            data:{'cid':cid},
+            success:function (data) {
+                data=JSON.parse(data)
+                if (data.status){
+                    alert(data.msg)
+
+                }else{alert(data.msg)}
+            }
+
+
+        })
+
+
+    })
+
+
+
+</script>
+{% endblock %}
+
+
+
+
+
+
+{##}
+{#{% load staticfiles %}#}
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <title>公共客户资源</title>#}
+{#        <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.css' %}">#}
+{##}
+{#    <style>#}
+{#        table td,th{#}
+{#            text-align: center;#}
+{#        }#}
+{##}
+{#    </style>#}
+{#</head>#}
+{#<body>#}
+{#<div class="container">#}
+{#    <div class="row">#}
+{#        <div class="col-md-4 col-md-offset-4">#}
+{#            <br><br><h1>公共资源</h1><br>#}
+{#            <table border="1" class="table table-bordered table-striped">#}
+{#        <thead>#}
+{#            <tr>#}
+{#                <th>ID</th>#}
+{#                <th>QQ</th>#}
+{#                <th>姓名</th>#}
+{#                <th>操作</th>#}
+{#            </tr>#}
+{#        </thead>#}
+{#        <tbody>#}
+{#            {% for row in customer_list %}#}
+{#            <tr>#}
+{#                <td class="{{ row.id }}">{{ row.id }}</td>#}
+{#                <td>{{ row.qq }}</td>#}
+{#                <td>{{ row.name }}</td>#}
+{#                <td> <a href="/stark/crm/customer/{{ row.id }}/competition/">抢单</a> <button class="btn btn-info">抢单</button></td>#}
+{#            </tr>#}
+{#            {% endfor %}#}
+{#        </tbody>#}
+{#    </table>#}
+{#        <button id="ww"></button>#}
+{#        </div>#}
+{#    </div>#}
+{#</div>#}
+{##}
+{#<script src="/static/jquery-1.12.4.min.js"></script>#}
+{##}
+{#<script>#}
+{##}
+{#    $('.btn').click(function () {#}
+{#        var cid=$(this).parent().children('td:first').attr('class')#}
+{#        alert(cid)#}
+{##}
+{#        $.ajax({#}
+{##}
+{#            url:'/stark/crm/customer/'+cid+'/competition/',#}
+{#            type:'POST',#}
+{#            data:{'cid':cid},#}
+{#            success:function (data) {#}
+{#                data=JSON.parse(data)#}
+{#                if (data.status){#}
+{#                    alert(data.msg)#}
+{##}
+{#                }else{alert(data.msg)}#}
+{#            }#}
+{##}
+{##}
+{#        })#}
+{##}
+{##}
+{#    })#}
+{##}
+{##}
+{##}
+{#</script>#}
+{##}
+{##}
+{#</body>#}
+{#</html>#}

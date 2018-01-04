@@ -1,0 +1,23 @@
+{% for k,item in menu_dict.items %}
+    <div class="item" style="padding: 10px 0 0 0px">
+        <div class="item-title" style="font-size: 20px;">
+            <i class="fa fa-folder" aria-hidden="true"></i>
+            <b>{{ item.menu_title }}</b>
+        </div>
+        {% if item.active %}
+            <div class="item-permission">
+        {% else %}
+            <div class="item-permission hide">
+        {% endif %}
+            {% for v in item.children %}
+
+                {% if v.active %}
+                    <li><a href="{{ v.url }}" class="active">{{ v.title }}</a></li>
+                {% else %}
+                    <li><a href="{{ v.url }}">{{ v.title }}</a></li>
+                {% endif %}
+
+            {% endfor %}
+        </div>
+    </div>
+{% endfor %}
